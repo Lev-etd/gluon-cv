@@ -544,6 +544,8 @@ def main():
         # save the last model
         net.save_parameters('%s/%s-%s-%03d.params'%(opt.save_dir, opt.dataset, model_name, opt.num_epochs-1))
         trainer.save_states('%s/%s-%s-%03d.states'%(opt.save_dir, opt.dataset, model_name, opt.num_epochs-1))
+        file_name = "net.params"
+        net.save_parameters(file_name)
 
     if opt.mode == 'hybrid':
         net.hybridize(static_alloc=True, static_shape=True)
