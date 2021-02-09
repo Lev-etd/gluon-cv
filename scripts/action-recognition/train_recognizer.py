@@ -359,11 +359,11 @@ def main():
 
     train_metric = mx.metric.Accuracy()
     acc_top1 = mx.metric.Accuracy()
-    acc_top5 = mx.metric.TopKAccuracy(5)
+    acc_top3 = mx.metric.TopKAccuracy(3)
 
     def test(ctx, val_data, kvstore=None):
         acc_top1.reset()
-        acc_top5.reset()
+        acc_top3.reset()
         L = gluon.loss.SoftmaxCrossEntropyLoss()
         num_test_iter = len(val_data)
         val_loss_epoch = 0
@@ -378,17 +378,17 @@ def main():
             loss = [L(yhat, y.astype(opt.dtype, copy=False)) for yhat, y in zip(outputs, label)]
 
             acc_top1.update(label, outputs)
-            acc_top5.update(label, outputs)
+            acc_top3.update(label, outputs)
 
             val_loss_epoch += sum([l.mean().asscalar() for l in loss]) / len(loss)
 
             if opt.log_interval and not (i+1) % opt.log_interval:
                 _, top1 = acc_top1.get()
-                _, top5 = acc_top5.get()
+                _, top5 = acc_top3.get()
                 logger.info('Batch [%04d]/[%04d]: acc-top1=%f acc-top5=%f' % (i, num_test_iter, top1*100, top5*100))
 
         _, top1 = acc_top1.get()
-        _, top5 = acc_top5.get()
+        _, top5 = acc_top3.get()
         val_loss = val_loss_epoch / num_test_iter
 
         if kvstore is not None:
@@ -524,11 +524,11 @@ def main():
                     kv.init(999999, nd.zeros(1))
 
                 if opt.kvstore is not None:
-                    acc_top1_val, acc_top5_val, loss_val = test(ctx, val_data, kv)
+                    acc_top1_val, acc_top3_val, loss_val = test(ctx, val_data, kv)
                 else:
-                    acc_top1_val, acc_top5_val, loss_val = test(ctx, val_data)
+                    acc_top1_val, acc_top3_val, loss_val = test(ctx, val_data)
 
-                logger.info('[Epoch %03d] validation: acc-top1=%f acc-top5=%f loss=%f' % (epoch, acc_top1_val*100, acc_top5_val*100, loss_val))
+                logger.info('[Epoch %03d] validation: acc-top1=%f acc-top5=%f loss=%f' % (epoch, acc_top1_val*100, acc_top3_val*100, loss_val))
                 sw.add_scalar(tag='val_loss_epoch', value=loss_val, global_step=epoch)
                 sw.add_scalar(tag='val_acc_top1_epoch', value=acc_top1_val*100, global_step=epoch)
 
